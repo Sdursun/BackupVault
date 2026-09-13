@@ -28,6 +28,12 @@ full feature list, and known limitations, or open
 [`BackupVault.guide`](BackupVault.guide) on an Amiga for the same
 content in AmigaGuide form.
 
+## Screenshots
+
+| Backup jobs | Restore | Repositories |
+|:---:|:---:|:---:|
+| ![Main window - Backup tab](Screenshots/Main.png) | ![Restore tab](Screenshots/Restore.png) | ![Repositories window](Screenshots/Repositories.png) |
+
 ## License
 
 Public domain - see [LICENSE](LICENSE).
