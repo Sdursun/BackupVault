@@ -230,15 +230,12 @@ third number) are not separately itemized here.
     run's summary - see @{" Sync Jobs " LINK SYNCJOBS}.
   - Fixed: a one-way Sync Job's progress bar could show roughly double
     the real number of files once its baseline was fully populated.
-  - Repository list gained a Max Filename column for Local Repositories,
-    found by actually testing the volume rather than trusting its
-    reported filesystem type - see @{" Repositories " LINK REPOSITORIES}.
-  - Repository list's File System column now identifies a Local
-    Repository by asking its actual handler task, not just its reported
-    DOS type - a volume can report a plain FFS-style type while a
-    different handler (most commonly PFS3) really manages it, which the
-    old dostype-only check could not detect - see
-    @{" Repositories " LINK REPOSITORIES}.
+  - Removed: the Repository list's File System column (introduced in
+    0.5.x) and a brief, since-reverted Max Filename column - testing
+    found a volume's reported filesystem type cannot be trusted to say
+    which handler actually manages it, in more than one different way,
+    and no reliable replacement was ready in time for this release. May
+    return in some other form later.
   - BackupVault.jobextras changed from a fixed-size binary record to
     plain text internally, so it can keep gaining fields (like Exclude
     patterns, this release) without any risk of corrupting an existing
@@ -395,35 +392,12 @@ handling is needed anywhere in this program.
 
 Once mounted, an SMB/SFTP Repository works exactly like a Local one
 everywhere else in the program - disk space is shown for it in the
-Repository manager's list the same way. The File System column shows
-"smb2-handler"/"ssh2-handler" plus that handler's own version (read
-from its $VER: string in L:) instead of a real filesystem type, since
-smb2fs/ssh2fs don't report one through the same DOS call a local
-filesystem does. For a Local Repository, this is identified by asking
-the actual handler task managing that volume, not just by reading its
-reported DOS type - a volume can be set up to report a plain FFS-style
-type while a different handler (most commonly PFS3) is really running
-it, which the DOS type alone can't reveal.
+Repository manager's list the same way.
 
 The Repository manager (Backup tab's "Repository" button, or Menu/
 Manage/Repositories...) lists every Repository with its Name, Type,
-Path, a Size column showing the destination's total and free space
-(e.g. "20 GB (14 GB free)"), and the File System column described above
-(e.g. "PFS3 19.4" for a Local Repository, "smb2-handler 3.2" for an SMB
-one).
-
-A Local Repository's row also shows a @{b}Max Filename@{ub} column - the
-longest filename that volume can actually store, found by actually
-creating and immediately deleting a test file of various lengths on it.
-This is always tested for real rather than assumed from the volume's
-reported filesystem type, even for what looks like plain FFS - as just
-explained above, the DOS type alone can't reveal whether a different
-handler with a different real limit is actually managing it. Shown as
-"-" for SMB/SFTP Repositories, since the real limit there is whatever
-the remote server enforces. This matters most for a Sync Job's
-destination - see
-@{" Sync Jobs " LINK SYNCJOBS} for what happens when a file's name is
-too long for it.
+Path, and a Size column showing the destination's total and free space
+(e.g. "20 GB (14 GB free)").
 
 New/Edit work the same way as for a job: pick one from the list (or
 double-click it), then Edit, or use New to define one from scratch.
@@ -598,8 +572,7 @@ since there's no one there to answer it - see
 
 Preview cannot warn about a destination that silently rejects a
 specific file (e.g. a filesystem with a shorter maximum filename than
-the source allows - see @{" Repositories " LINK REPOSITORIES}'s Max
-Filename column) since it never actually touches the destination; a
+the source allows) since it never actually touches the destination; a
 real Continue run logs that plainly instead ("FAILED to copy ...") if
 it happens, and keeps retrying that file on every future run. Fixing it
 means either reformatting the destination with long-filename support or

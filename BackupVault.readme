@@ -221,30 +221,8 @@ REPOSITORIES
   retire an SMB/SFTP share, not just removing it from the list.
 
   Once mounted, an SMB/SFTP Repository works exactly like a Local one
-  for every other purpose. The Repository list's File System column
-  shows the native filesystem and its version for a Local Repository
-  (e.g. "PFS3 19.4"), or "smb2-handler"/"ssh2-handler" plus that
-  handler's own version for SMB/SFTP - those two don't report a real
-  AmigaDOS filesystem type the way a local one does. For a Local
-  Repository, this is identified by asking the actual handler task
-  managing that volume, not just by reading its reported DOS type -
-  a volume can be set up to report a plain FFS-style type while a
-  different handler (most commonly PFS3) is really running it, which
-  the DOS type alone can't reveal.
-
-  A Local Repository's row also shows a Max Filename column - the
-  longest filename that volume can actually store, found by actually
-  creating and immediately deleting a test file of various lengths on
-  it. This is always tested for real rather than assumed from the
-  volume's reported filesystem type, even for what looks like plain
-  FFS - a volume can be deliberately set up to report a standard
-  FFS-style filesystem id while a different handler (e.g. PFS3) with a
-  different real limit actually manages it, and there is no other way
-  to be sure. This is shown as "-" for SMB/SFTP Repositories, since the
-  real limit there is whatever the remote server enforces. Knowing this
-  number in advance matters most for a Sync Job's destination - see
-  SYNC JOBS above for what happens when a file's name is too long for
-  it.
+  for every other purpose - disk space is shown for it in the
+  Repository manager's list the same way as a Local one.
 
   A Repository that is still used by a Backup Job cannot be deleted -
   BackupVault lists which job(s) need to be pointed at a different
@@ -366,10 +344,9 @@ SYNC JOBS
   the saved baseline at all - safe to run as many times as you like),
   or Cancel. Preview cannot warn about a destination that silently
   rejects a specific file (e.g. a filesystem with a shorter maximum
-  filename than the source allows - see REPOSITORIES' Max Filename
-  column) since it never actually touches the destination; a real
-  Continue run logs that plainly instead ("FAILED to copy ...") if it
-  happens.
+  filename than the source allows) since it never actually touches the
+  destination; a real Continue run logs that plainly instead
+  ("FAILED to copy ...") if it happens.
 
   If a file genuinely cannot be copied to the destination at all (most
   commonly: its name is longer than the destination filesystem allows),
@@ -660,15 +637,12 @@ VERSION HISTORY (0.4.0 -> 0.7.0)
       the run's summary - see SYNC JOBS.
     - Fixed: a one-way Sync Job's progress bar could show roughly double
       the real number of files once its baseline was fully populated.
-    - Repository list gained a Max Filename column for Local
-      Repositories, found by actually testing the volume rather than
-      trusting its reported filesystem type - see REPOSITORIES.
-    - Repository list's File System column now identifies a Local
-      Repository by asking its actual handler task, not just its
-      reported DOS type - a volume can report a plain FFS-style type
-      while a different handler (most commonly PFS3) really manages it,
-      which the old dostype-only check could not detect - see
-      REPOSITORIES.
+    - Removed: the Repository list's File System column (introduced in
+      0.5.x) and a brief, since-reverted Max Filename column - testing
+      found a volume's reported filesystem type cannot be trusted to
+      say which handler actually manages it, in more than one different
+      way, and no reliable replacement was ready in time for this
+      release. May return in some other form later.
     - BackupVault.jobextras changed from a fixed-size binary record to
       plain text internally, so it can keep gaining fields (like
       Exclude patterns, this release) without any risk of corrupting an
