@@ -2,7 +2,7 @@ Short:        Backup Utility AmigaOS
 Author:       blasterreal@gmail.com (Serkan DURSUN)
 Uploader:     blasterreal gmail com (Serkan DURSUN)
 Type:         disk/bakup
-Version:      0.6.8
+Version:      0.7.0
 Architecture: m68k-amigaos
 Distribution: Aminet
 Kurz:         Amiga OS 3.x
@@ -10,7 +10,7 @@ Kurz:         Amiga OS 3.x
 
 Backup Vault
 ============
-Version 0.6.8
+Version 0.7.0
 
 A backup / restore / sync / verify utility for AmigaOS 3.x, with a MUI
 graphical front end (BackupVault), a matching command-line tool
@@ -53,6 +53,12 @@ FEATURES
     optional third-party z.library - see COMPRESSION.
   - Optional per-job archive retention (keep only the last N archives,
     older ones deleted automatically after each successful run).
+  - Optional per-job exclude patterns (semicolon-separated AmigaDOS
+    wildcards, e.g. "#?.tmp;T") to skip matching files/folders anywhere
+    in the source tree - see CREATING A BACKUP JOB.
+  - A free-space warning before a manually-started Backup Job runs, if
+    the destination doesn't look like it has enough room for the
+    source - see CREATING A BACKUP JOB.
   - Optional per-job virus scanning before backup, via the third-party
     xvs.library - see CREATING A BACKUP JOB.
   - Optional per-job/per-Sync-Job scheduling - Daily, Weekly, Monthly,
@@ -61,7 +67,9 @@ FEATURES
     SCHEDULING.
   - Two-way and one-way Sync Jobs (mirror two directories against each
     other, or push changes one way only), independent of the Backup
-    Job/archive system - see SYNC JOBS.
+    Job/archive system, with a Preview option to see exactly what a run
+    would copy/delete/conflict without changing anything - see SYNC
+    JOBS.
   - Full Restore, selective Restore Files (pick individual files/
     folders from an archive), Check (verify an archive's integrity
     without restoring it), and Import Backup (adopt a .bku file created
@@ -219,6 +227,19 @@ REPOSITORIES
   handler's own version for SMB/SFTP - those two don't report a real
   AmigaDOS filesystem type the way a local one does.
 
+  A Local Repository's row also shows a Max Filename column - the
+  longest filename that volume can actually store. For native OFS/FFS
+  this is always exactly 30 characters (a fixed AmigaOS limit, shown
+  instantly, no test needed); for anything else (PFS/PFS3/SFS, etc.),
+  which filesystem support depends on how that specific volume was
+  formatted rather than anything BackupVault can just ask it, it is
+  found by actually creating and immediately deleting a test file of
+  various lengths on that volume. This is shown as "-" for SMB/SFTP
+  Repositories, since the real limit there is whatever the remote
+  server enforces. Knowing this number in advance matters most for a
+  Sync Job's destination - see SYNC JOBS above for what happens when a
+  file's name is too long for it.
+
   A Repository that is still used by a Backup Job cannot be deleted -
   BackupVault lists which job(s) need to be pointed at a different
   Repository first.
@@ -259,6 +280,13 @@ CREATING A BACKUP JOB
       same archive name, overwritten each run, with a confirmation
       prompt first), or "Custom suffix" (your own fixed text).
     - Compression - None, LZSS, or Deflate (zlib) - see COMPRESSION.
+    - Exclude patterns (optional) - a semicolon-separated list of
+      AmigaDOS wildcard patterns, e.g. "#?.tmp;T;Cache", matched against
+      each item's own bare name (not its full path), anywhere in the
+      source tree at any depth. A matching directory is skipped
+      entirely, along with everything under it. The job's log lists
+      every excluded item by name ("Excluded: ...") and the final
+      summary shows how many were left out.
     - "Check archive after backup" - runs a full Check immediately
       after a successful backup, same as pressing Check by hand.
     - "Scan for viruses before backup (xvs.library)" - if the optional
@@ -289,6 +317,13 @@ CREATING A BACKUP JOB
   Edit Job button. A job's kind (File Backup vs Sync Job) can't be
   changed while editing - delete and recreate it instead.
 
+  Pressing Start on a Backup Job first estimates the source's total size
+  and compares it against the destination's free space; if it looks
+  like there may not be enough room, you get a warning with both numbers
+  and a chance to cancel before anything is written. This check only
+  runs for a manual Start press, not a scheduled/unattended run, so it
+  never adds a full extra directory scan to every automated backup.
+
 
 SYNC JOBS
 ---------
@@ -301,7 +336,12 @@ SYNC JOBS
       either side whatever was deleted on the other since the last run.
     - One-way (A -> B) - copies changes from A to B only, and deletes
       from B whatever was deleted from A; changes made directly in B
-      are never pushed back to A.
+      are never pushed back to A. If B is missing a file it should
+      already have (deleted by hand, or B points at storage that
+      doesn't persist between runs, such as a RAM disk cleared on
+      reboot), it is copied again even if A itself hasn't changed -
+      one-way sync always makes sure B actually has what A says it
+      should, rather than just trusting last time's result.
 
   Sync Jobs use a saved baseline (PROGDIR:data/BackupVault.sync.<name>)
   of what both sides looked like after the last successful run, and MD5
@@ -312,9 +352,25 @@ SYNC JOBS
   testing - saving your first one shows a one-time warning to that
   effect and to keep an independent backup of both directories before
   relying on it, since a bug here could copy or delete files
-  unexpectedly. Running a Sync Job by hand also asks for confirmation
-  each time, explaining exactly what that run will copy/delete in which
-  direction, before it does anything.
+  unexpectedly. Running a Sync Job by hand asks for confirmation each
+  time with three choices: Continue (run it for real), Preview (see
+  exactly what it would copy/delete/flag as a conflict, logged with
+  "Would..." lines to its own <name>.sync-preview.log and opened
+  immediately in the log viewer, without touching either directory or
+  the saved baseline at all - safe to run as many times as you like),
+  or Cancel. Preview cannot warn about a destination that silently
+  rejects a specific file (e.g. a filesystem with a shorter maximum
+  filename than the source allows - see REPOSITORIES' Max Filename
+  column) since it never actually touches the destination; a real
+  Continue run logs that plainly instead ("FAILED to copy ...") if it
+  happens.
+
+  If a file genuinely cannot be copied to the destination at all (most
+  commonly: its name is longer than the destination filesystem allows),
+  a real run logs "FAILED to copy" with the file's name and keeps
+  retrying it on every future run - fixing this means either reformatting
+  the destination with long-filename support or renaming the file, not
+  something Backup Vault can work around on its own.
 
 
 COMPRESSION
@@ -433,7 +489,8 @@ DOCUMENTATION
 FILES CREATED BY THE PROGRAM
 -----------------------------
   PROGDIR:logs/                         - one log file per backup/
-                                           restore/sync/check run
+                                           restore/sync/check/Sync
+                                           Preview run
   PROGDIR:data/BackupVault.catalog      - history of past backups/
                                            restores/syncs/checks/
                                            deletions
@@ -443,13 +500,16 @@ FILES CREATED BY THE PROGRAM
                                            CREDENTIALS above)
   PROGDIR:data/BackupVault.jobs         - saved Backup Jobs
   PROGDIR:data/BackupVault.jobextras    - a Backup Job's "Scan for
-                                           viruses before backup"
-                                           setting (see CREATING A
-                                           BACKUP JOB above) - kept
-                                           separate from
-                                           BackupVault.jobs so adding it
-                                           couldn't corrupt existing
-                                           saved jobs
+                                           viruses before backup" setting
+                                           and Exclude patterns (see
+                                           CREATING A BACKUP JOB above) -
+                                           kept separate from
+                                           BackupVault.jobs, as plain
+                                           text rather than a fixed-size
+                                           binary record, so it can keep
+                                           gaining fields like this
+                                           again later without any risk
+                                           to already-saved jobs
   PROGDIR:data/BackupVault.syncjobs     - saved Sync Jobs
   PROGDIR:data/BackupVault.sync.<name>  - one per Sync Job, its
                                            baseline (what both sides
@@ -496,7 +556,7 @@ KNOWN LIMITATIONS
     limited - see the disclaimer above.
 
 
-VERSION HISTORY (0.4.0 -> 0.6.8)
+VERSION HISTORY (0.4.0 -> 0.7.0)
 -----------------------------------
   This covers everything that changed since 0.4.0, grouped by minor
   version. Every patch-level build (the third number) is either a bug
@@ -572,6 +632,36 @@ VERSION HISTORY (0.4.0 -> 0.6.8)
       row, warnings/failures shown in bold) instead of always launching
       Multiview - an "Open in Multiview" button in that window still
       does, for whoever wants it. See HISTORY.
+
+  0.7.x
+    - Per-Backup-Job Exclude patterns added (semicolon-separated
+      AmigaDOS wildcards) - see CREATING A BACKUP JOB.
+    - A free-space warning before a manually-started Backup Job, if the
+      destination doesn't look big enough for the source - see CREATING
+      A BACKUP JOB.
+    - Sync Jobs gained a Preview option (Continue/Preview/Cancel) - see
+      what a run would copy/delete/conflict without touching anything -
+      see SYNC JOBS.
+    - Fixed: a one-way Sync Job could permanently stop re-copying a file
+      to a destination that doesn't persist between runs (e.g. a RAM
+      disk cleared on reboot), since it only checked whether the source
+      had changed, never whether the destination still actually had the
+      file - see SYNC JOBS.
+    - Fixed: a Sync Job that could not copy a specific file at all (most
+      commonly a destination filesystem with a shorter maximum filename
+      than the source) used to fail silently with no visible message;
+      it is now logged plainly ("FAILED to copy ...") with a count in
+      the run's summary - see SYNC JOBS.
+    - Fixed: a one-way Sync Job's progress bar could show roughly double
+      the real number of files once its baseline was fully populated.
+    - Repository list gained a Max Filename column for Local
+      Repositories (instant "30" for native OFS/FFS, an actual test for
+      anything else) - see REPOSITORIES.
+    - BackupVault.jobextras changed from a fixed-size binary record to
+      plain text internally, so it can keep gaining fields (like
+      Exclude patterns, this release) without any risk of corrupting an
+      existing install's file - migrated automatically, once, the first
+      time you run this version.
 
 
 CONTACT
