@@ -1,0 +1,931 @@
+@database "BackupVault.guide"
+@$VER: BackupVault.guide 0.6.8 (2026)
+@author "Serkan Dursun"
+@(c) "Public Domain"
+@wordwrap
+@smartwrap
+
+@node MAIN "Backup Vault 0.6.8 - Main Menu"
+@toc MAIN
+@{b}Backup Vault@{ub}
+Version 0.6.8
+
+A backup / restore / sync / verify utility for AmigaOS 3.x, with a MUI
+graphical front end (BackupVault), a matching command-line tool
+(Backup), and two headless companion tools still under active
+development (BackupVaultDaemon, BackupVaultWebDaemon).
+
+                    @{" Overview "               LINK OVERVIEW}
+                    @{" Features "               LINK FEATURES}
+                    @{" Developer "              LINK DEVELOPER}
+                    @{" Version history "        LINK VERSIONHISTORY}
+                    @{" Requirements "           LINK REQUIREMENTS}
+                    @{" Installation "           LINK INSTALL}
+                    @{" Programs in this package " LINK PROGRAMS}
+
+                    @{" The Backup tab "         LINK BACKUPTAB}
+                    @{" Repositories "           LINK REPOSITORIES}
+                    @{" Credentials "            LINK CREDENTIALS}
+                    @{" Creating a Backup Job "  LINK CREATEJOB}
+                    @{" Sync Jobs "              LINK SYNCJOBS}
+                    @{" Compression "            LINK COMPRESSION}
+                    @{" Scheduling "             LINK SCHEDULING}
+                    @{" Headless daemon "        LINK DAEMON}
+                    @{" Web daemon "             LINK WEBDAEMON}
+                    @{" Running a job "          LINK RUNNINGJOBS}
+
+                    @{" The Restore tab "        LINK RESTORETAB}
+                    @{" Full Restore "           LINK FULLRESTORE}
+                    @{" Restore Files "          LINK RESTOREFILES}
+                    @{" Check "                  LINK CHECKARCHIVE}
+                    @{" Import "                 LINK IMPORTBACKUP}
+
+                    @{" The History tab "        LINK HISTORYTAB}
+                    @{" The command-line tool "  LINK CLITOOL}
+                    @{" Files this program uses " LINK FILESCREATED}
+                    @{" Known limitations "      LINK LIMITATIONS}
+                    @{" Disclaimer "             LINK DISCLAIMER}
+                    @{" Contact & credits "      LINK CONTACT}
+@endnode
+
+
+@node OVERVIEW "Overview"
+@{b}Overview@{ub}
+
+Backup Vault is a job/Repository based backup utility, similar in
+spirit to Veeam: you define a Repository (a destination) once, then one
+or more Backup Jobs that write full, standalone archives (.bku) into
+it. Separately, Sync Jobs keep two directories mirrored against each
+other without going through the archive system at all.
+
+The package is four programs sharing the same code and archive format:
+
+  @{b}BackupVault@{ub}         - the MUI graphical front end (what this guide
+                    mostly describes).
+  @{b}Backup@{ub}              - a command-line tool for scripted use.
+  @{b}BackupVaultDaemon@{ub}   - a headless scheduler, still in development.
+  @{b}BackupVaultWebDaemon@{ub} - an experimental web browser/downloader for
+                    Repository contents, still in development.
+
+See @{" Programs in this package " LINK PROGRAMS} for all four, and
+@{" Disclaimer " LINK DISCLAIMER} before relying on any of them for
+anything you can't afford to lose.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node FEATURES "Features"
+@{b}Features@{ub}
+
+  - Job/Repository based backup - define a destination once, reuse it
+    from any number of Backup Jobs.
+  - Three Repository kinds: a plain local directory, an SMB (Windows/
+    Samba) network share, or an SFTP (SSH) share - see
+    @{" Repositories " LINK REPOSITORIES}.
+  - A Credential Manager so an SMB/SFTP username and password only have
+    to be typed in once and can be reused by any number of
+    Repositories - see @{" Credentials " LINK CREDENTIALS}.
+  - Full, standalone archives with three compression choices: none, a
+    small built-in LZSS compressor, or real Deflate via the optional
+    third-party z.library - see @{" Compression " LINK COMPRESSION}.
+  - Optional per-job archive retention (keep only the last N archives,
+    older ones deleted automatically after each successful run).
+  - Optional per-job virus scanning before backup, via the third-party
+    xvs.library - see @{" Creating a Backup Job " LINK CREATEJOB}.
+  - Optional per-job/per-Sync-Job scheduling - Daily, Weekly, Monthly,
+    or a fixed interval - plus an optional WBStartup + iconified launch
+    so scheduled jobs can run unattended - see
+    @{" Scheduling " LINK SCHEDULING}.
+  - Two-way and one-way Sync Jobs, independent of the Backup Job/
+    archive system - see @{" Sync Jobs " LINK SYNCJOBS}.
+  - Full Restore, selective Restore Files, Check (verify without
+    restoring), and Import Backup - see @{" The Restore tab " LINK RESTORETAB}.
+  - A History tab logging every backup/restore/sync/check/deletion,
+    with search and per-run log viewing - see
+    @{" The History tab " LINK HISTORYTAB}.
+  - A command-line companion tool for scripted use - see
+    @{" The command-line tool " LINK CLITOOL}.
+  - Two headless companion tools still under active development - a
+    scheduler daemon and an experimental web browser/downloader for
+    Repository contents - see @{" Programs in this package " LINK PROGRAMS}.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node DEVELOPER "Developer"
+@{b}Developer@{ub}
+
+Serkan Dursun
+blasterreal@{"@"}gmail.com
+
+Backup Vault is Public Domain - see @{" Contact & credits " LINK CONTACT}
+for the third-party libraries and MUI custom classes it relies on, each
+under their own license.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node VERSIONHISTORY "Version history"
+@{b}Version history (0.4.0 -> 0.6.8)@{ub}
+
+Grouped by minor version, since individual patch-level builds (the
+third number) are not separately itemized here.
+
+@{b}0.4.x@{ub}
+  - Scheduling introduced for Backup and Sync Jobs (Daily/Interval at
+    first, later extended - see 0.5.x).
+  - Duplicate job names and running more than one job at once are both
+    refused outright, rather than silently allowed.
+  - Per-Backup-Job archive retention (keep last N, delete the rest).
+  - Double-clicking a job opens it for editing.
+  - A "No repository yet" notice when trying to create a job before any
+    Repository exists.
+  - A one-time disclaimer on a Sync Job's first save.
+
+@{b}0.5.x@{ub}
+  - Weekly and Monthly added to the Schedule options (alongside Daily/
+    Interval).
+  - SMB Share and SFTP (SSH) Repositories introduced, backed by the
+    third-party smb2fs/ssh2fs handlers.
+  - Repository list gained a File System column.
+  - A status line under the progress gauge showing the exact result of
+    the last run, and "[job] running..." while one is active.
+  - Fixed: gauge text garbling after resizing the main window.
+  - Stopping a backup mid-run now deletes the incomplete archive and
+    logs the cancellation, instead of leaving a partial file behind.
+  - "Remove History" added (History menu), distinct from "Remove All
+    Logs".
+  - BackupVaultWebDaemon introduced as a first, experimental prototype.
+  - Fixed a system requester ("Please insert volume...") that could
+    appear while mounting an SMB/SFTP share.
+  - SMB/SFTP Mountlist files moved to DEVS:DOSDrivers/ and left in
+    place after a successful mount, so the share also survives a
+    reboot; removed again only when the Repository is deleted from
+    within BackupVault, which now also unmounts it.
+  - Deleting a Repository still used by a Backup Job is refused,
+    listing which job(s) need to be repointed first.
+  - Repository list shows "smb2-handler"/"ssh2-handler" plus that
+    handler's own version for SMB/SFTP, instead of a blank/guessed
+    filesystem type.
+
+@{b}0.6.x@{ub}
+  - Credential Manager introduced - SMB/SFTP Repositories now pick a
+    saved username/password/note from a Cycle button instead of typing
+    them in per Repository; the old "Test Connection" buttons were
+    removed since Save already tests the same way.
+  - Double-clicking a Repository or Credential opens it for editing,
+    matching Backup Jobs.
+  - Fixed: a file that had already been listed but disappeared before
+    being read (e.g. deleted while a backup was mid-run) could corrupt
+    every archive entry after it, not just fail that one file.
+  - Fixed: a Backup Job whose source included BackupVault's own log
+    directory would always fail on its own, still-open log file for
+    that run; it's now skipped cleanly instead.
+  - SMB/SFTP Repositories gained an optional "Path in share" field
+    (with its own Select... browser) to target a subdirectory of the
+    share instead of always its root.
+  - All saved-state files (catalog, Repositories, Credentials, Jobs,
+    Sync Jobs, Sync Job baselines) moved from directly under PROGDIR:
+    into PROGDIR:data/ - an existing install's files are migrated
+    there automatically, once.
+  - A Backup Job can now optionally scan each file for viruses
+    (xvs.library) before archiving it, with the result folded right
+    into that file's own log line, e.g. "(scanned : passed)" - see
+    @{" Creating a Backup Job " LINK CREATEJOB} and
+    @{" Requirements " LINK REQUIREMENTS}.
+  - "View Log" now opens a log in its own in-app window (one line per
+    row, warnings/failures shown in bold) instead of always launching
+    Multiview - an "Open in Multiview" button in that window still
+    does, for whoever wants it. See @{" The History tab " LINK HISTORYTAB}.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node REQUIREMENTS "Requirements"
+@{b}Requirements@{ub}
+
+  - AmigaOS 3.x (3.0 or later recommended).
+  - TabGroup.mcc and NList.mcc/NListview.mcc/NListtree.mcc - third-party
+    MUI custom classes BackupVault's GUI is built on. Not part of
+    AmigaOS - install them as MUI classes if you don't already have
+    them (both are common, widely-used MCCs).
+  - Optional: z.library (salass00/z_lib) for Deflate compression. If it
+    is not installed, Deflate jobs simply store their files
+    uncompressed instead.
+  - Optional: smb2fs and/or ssh2fs (each a separate third-party
+    package, not included) plus a working TCP/IP stack, only if you
+    want to use an SMB Share or SFTP Repository.
+  - Optional: xvs.library (Georg Wittmann / Virus Help Team, not
+    included) for a Backup Job's "Scan for viruses before backup"
+    option. If it is not installed, that option is simply skipped.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node INSTALL "Installation"
+@{b}Installation@{ub}
+
+  1. Copy the BackupVault drawer to your Amiga (or a partition of your
+     choice).
+  2. Make sure TabGroup.mcc and NList.mcc/NListview.mcc are installed
+     (see @{" Requirements " LINK REQUIREMENTS}).
+  3. Run "BackupVault" from Workbench or a Shell. The command-line tool
+     "Backup" can be run directly from a Shell - see
+     @{" The command-line tool " LINK CLITOOL}.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node PROGRAMS "Programs in this package"
+@{b}Programs in this package@{ub}
+
+@{b}BackupVault@{ub} - the MUI graphical front end this guide mostly
+describes. The main program most people will use.
+
+@{b}Backup@{ub} - a command-line tool for scripted use, sharing the same
+archive format and doing the actual work behind every BackupVault GUI
+operation. See @{" The command-line tool " LINK CLITOOL}.
+
+@{b}BackupVaultDaemon@{ub} - @{b}EXPERIMENTAL, STILL IN DEVELOPMENT.@{ub} A
+tiny headless CLI tool (no MUI, no window) that runs your saved,
+scheduled Backup/Sync Jobs without BackupVault's own window open - an
+alternative to leaving BackupVault itself running/iconified just for
+scheduling. See @{" Headless daemon " LINK DAEMON}.
+
+@{b}BackupVaultWebDaemon@{ub} - @{b}EXPERIMENTAL, STILL IN DEVELOPMENT, NOT
+YET INTEGRATED INTO THE GUI.@{ub} A separate headless HTTP server that
+lets you browse and download the contents of your Repositories from an
+ordinary web browser. See @{" Web daemon " LINK WEBDAEMON}.
+
+Both BackupVaultDaemon and BackupVaultWebDaemon may change
+significantly, including their command-line options, before they are
+considered stable - see @{" Known limitations " LINK LIMITATIONS} and
+@{" Disclaimer " LINK DISCLAIMER}.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node BACKUPTAB "The Backup tab"
+@{b}The Backup tab@{ub}
+
+The Backup tab lists your saved Backup Jobs and Sync Jobs together, in
+one list. Buttons:
+
+  @{b}Create Backup@{ub}  - opens the Create Job dialog (Backup Job or Sync
+                 Job, chosen by its own Type cycle) - see
+                 @{" Creating a Backup Job " LINK CREATEJOB} and
+                 @{" Sync Jobs " LINK SYNCJOBS}.
+  @{b}Repository@{ub}     - opens the Repository manager - see
+                 @{" Repositories " LINK REPOSITORIES}.
+  @{b}Edit Job@{ub}       - opens the Create Job dialog, pre-filled, for
+                 whichever job is selected in the list. A job's kind
+                 (Backup or Sync) cannot be changed while editing -
+                 delete and recreate it instead if you need to.
+  @{b}Delete Job@{ub}     - removes the selected job (after confirming).
+                 For a Sync Job this also removes its baseline file -
+                 see @{" Files this program uses " LINK FILESCREATED}.
+
+The Start button at the bottom of the window runs whichever job is
+selected in the list - see @{" Running a job " LINK RUNNINGJOBS}.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node REPOSITORIES "Repositories"
+@{b}Repositories@{ub}
+
+A Repository is a named backup destination. Every Backup Job writes
+into a Repository, chosen by name; more than one job can share the
+same Repository. Three kinds, chosen by the "Type" cycle in the
+Create/Edit Repository dialog:
+
+  @{b}Local@{ub}     - a plain directory, same as always.
+  @{b}SMB Share@{ub}  - a Windows/Samba network share, mounted via the
+             third-party smb2fs handler (L:smb2-handler -
+             https://github.com/salass00/smb2fs, not included with
+             this program - must already be installed, along with a
+             TCP/IP stack).
+  @{b}SFTP (SSH)@{ub} - a share on an SSH server, mounted via the
+             third-party ssh2fs handler (L:ssh2-handler - see the
+             ssh2fs/ folder in this project's own source, or wherever
+             you obtained it - also not included).
+
+For SMB/SFTP, fill in the connection fields (Server/Share for SMB,
+Host/Port for SFTP), pick a Credential for the username/password (see
+@{" Credentials " LINK CREDENTIALS} - the dialog's own "Add Credential"
+button gets you there without losing what you've typed if you don't
+have one yet), and optionally fill in "Path in share" if you want the
+Repository to point at a subdirectory of the share rather than its root
+- type a path directly (a Unix-style "/like/this/" is tidied up
+automatically), or press that field's own "Select..." button to
+connect and browse into the share first. Then press Save - BackupVault
+builds a Mountlist entry on the fly in DEVS:DOSDrivers/ and runs the
+standard AmigaDOS Mount command against it, then confirms the resulting
+volume is actually accessible before accepting it as a Repository - a
+wrong password or an unreachable server is refused with an explanation
+rather than silently saved as broken.
+
+Volume name is not a separate field - the Repository's own Name doubles
+as the AmigaDOS volume it's mounted as (characters a volume name can't
+use are replaced with '-').
+
+The Mountlist file BackupVault writes to DEVS:DOSDrivers/ is left in
+place once mounting succeeds, so the share stays mounted after a reboot
+too, without reopening BackupVault - it's only removed again if you
+delete the Repository from within BackupVault (which also unmounts the
+volume). This does mean deleting a Repository is the correct way to
+retire an SMB/SFTP share, not just deleting it from the list and
+forgetting about it.
+
+SMB Repositories, mounted by BackupVault itself exactly as described
+above, have been confirmed working under WinUAE - no WinUAE-specific
+handling is needed anywhere in this program.
+
+Once mounted, an SMB/SFTP Repository works exactly like a Local one
+everywhere else in the program - disk space is shown for it in the
+Repository manager's list the same way. The File System column shows
+"smb2-handler"/"ssh2-handler" plus that handler's own version (read
+from its $VER: string in L:) instead of a real filesystem type, since
+smb2fs/ssh2fs don't report one through the same DOS call a local
+filesystem does.
+
+The Repository manager (Backup tab's "Repository" button, or Menu/
+Manage/Repositories...) lists every Repository with its Name, Type,
+Path, a Size column showing the destination's total and free space
+(e.g. "20 GB (14 GB free)"), and the File System column described above
+(e.g. "PFS3 19.4" for a Local Repository, "smb2-handler 3.2" for an SMB
+one).
+
+New/Edit work the same way as for a job: pick one from the list (or
+double-click it), then Edit, or use New to define one from scratch.
+Delete refuses (listing which job(s) are affected) if any Backup Job
+still writes to that Repository - point those jobs at a different
+Repository first.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node CREDENTIALS "Credentials"
+@{b}Credentials@{ub}
+
+A Credential is a saved username/password/note, managed from Menu /
+Manage / Credentials:
+
+  @{b}Add Credential@{ub}    - opens a blank Username/Password/Note form.
+  @{b}Edit Credential@{ub}   - opens the selected Credential's form,
+                    pre-filled (including its password), or
+                    double-click a row in the list.
+  @{b}Delete Credential@{ub} - removes the selected Credential (after
+                    confirming). Does not affect any Repository already
+                    saved using it - its username/password were copied
+                    in at Save time (see @{" Repositories " LINK
+                    REPOSITORIES}), so there's no live link to break;
+                    it just won't be offered as a choice any more.
+
+The list shows each Credential's Username, Password (always shown as
+**** regardless of its actual length or content - the list is for
+telling entries apart, not for reading passwords back), Note, and the
+date it was created.
+
+SMB Share and SFTP Repositories pick their Username/Password from a
+Credential (a Cycle button in the Repository dialog, showing
+"username (note)" with the note shortened to 12 characters) instead of
+typing them in per Repository, so the same server account can be
+reused without retyping it and only needs updating in one place if the
+password ever changes. If you don't have a Credential yet, the
+Repository dialog's own "Add Credential" button opens the same Add
+Credential window without losing what you were doing there.
+
+@{b}Passwords are stored in plain text@{ub} in
+PROGDIR:data/BackupVault.credentials, same as everything else this
+program saves - classic AmigaOS has no OS-level credential vault.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node CREATEJOB "Creating a Backup Job"
+@{b}Creating a Backup Job@{ub}
+
+From the Backup tab's "Create Backup" button (Type cycle set to "File
+Backup"):
+
+  @{b}Name@{ub}       - must be unique among your jobs.
+  @{b}Source@{ub}     - a directory, or a whole disk/volume. The Select...
+              button opens directly at the volume list (ASL's
+              "show volumes" mode), so picking a whole disk as the
+              source is one click - DoBackup() treats a volume root
+              exactly like any other directory.
+  @{b}Repository@{ub} - which saved Repository to write the archive into -
+              see @{" Repositories " LINK REPOSITORIES}.
+
+  @{b}Backup file suffix@{ub}:
+    - Add Time suffix - a timestamp per run, so repeated runs don't
+      overwrite each other.
+    - None - always the same archive name; overwriting an existing one
+      asks for confirmation first.
+    - Custom suffix - your own fixed text appended to the job name.
+
+  @{b}Compression@{ub} - None, LZSS, or Deflate (zlib) - see
+              @{" Compression " LINK COMPRESSION}.
+  @{b}Check archive after backup@{ub} - runs a full Check immediately after
+              a successful backup, same as pressing Check by hand
+              afterwards - see @{" Check " LINK CHECKARCHIVE}.
+  @{b}Scan for viruses before backup (xvs.library)@{ub} - if the optional
+              third-party xvs.library is installed, each file is read
+              into memory and checked before being archived. The job's
+              log shows the result right on that file's own line, e.g.
+              "File : UnZipSFX (76836 bytes) (scanned : passed)" - or
+              "(scanned : VIRUS WARNING - <name>)", or
+              "(not scanned : <reason>)" for the rare file that
+              couldn't be checked (too large, a read error). A flagged
+              file is still backed up as normal (an archived virus
+              can't do anything until something extracts and runs it) -
+              this only adds that log text and a summary in the job's
+              final result message, it never blocks or skips the file.
+              Off by default, and does nothing at all if xvs.library
+              isn't installed (logged once, at the top of
+              the log, rather than for every file). Since the whole
+              file has to be read an extra time to be scanned, expect a
+              backup with this on to take roughly twice as long.
+  @{b}Retention (keep last N, 0 = keep all)@{ub} - after each successful
+              run, older archives from this same job beyond the N most
+              recent are deleted automatically. 0 (the default) keeps
+              every archive forever.
+  @{b}Note@{ub}       - optional free text, stored in the archive itself and
+              shown in the History tab.
+  @{b}Schedule@{ub}   - see @{" Scheduling " LINK SCHEDULING}.
+
+Double-clicking a job in the list opens it for editing, same as the
+Edit Job button. A job's kind (File Backup or Sync Job) cannot be
+changed while editing - delete and recreate it instead if you need to.
+
+The Start button at the bottom of the window runs whichever job is
+selected in the list - see @{" Running a job " LINK RUNNINGJOBS}.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node SYNCJOBS "Sync Jobs"
+@{b}Sync Jobs@{ub}
+
+A Sync Job keeps two directories (Path A and Path B) aligned with each
+other, independent of the Backup Job/archive system entirely - no .bku
+file is produced. Created the same way as a Backup Job, with the
+Create Job dialog's own Type cycle set to "Sync Job". Two modes:
+
+  @{b}Two-way@{ub}            - each run makes both directories match,
+                   copying whatever is new/changed on either side to
+                   the other, and deleting on either side whatever was
+                   deleted on the other since the last run.
+  @{b}One-way (A -> B)@{ub}   - copies changes from A to B only, and
+                   deletes from B whatever was deleted from A; changes
+                   made directly in B are never pushed back to A.
+
+Sync Jobs use a saved baseline (PROGDIR:data/BackupVault.sync.<name> -
+see @{" Files this program uses " LINK FILESCREATED}) of what both sides
+looked like after the last successful run, and MD5 checksums to tell a
+real content change from a file that was merely touched, to decide
+what actually needs copying or deleting.
+
+@{b}Sync Job is new and still under active development and long-term
+testing@{ub} - saving your first one shows a one-time warning to that
+effect and to keep an independent backup of both directories before
+relying on it, since a bug here could copy or delete files
+unexpectedly; report any problem you find. Running a Sync Job by hand
+also asks for confirmation each time, explaining exactly what that run
+will copy/delete in which direction, before it does anything. A
+scheduled (unattended) run skips that confirmation, since there's no
+one there to answer it - see @{" Scheduling " LINK SCHEDULING}.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node COMPRESSION "Compression"
+@{b}Compression@{ub}
+
+Each Backup Job independently chooses one of:
+
+  @{b}None@{ub}    - files are stored as-is.
+  @{b}LZSS@{ub}    - a small, dependency-free compressor built into the
+             program itself.
+  @{b}Deflate@{ub} - real zlib compression, via the third-party z.library
+             (see @{" Requirements " LINK REQUIREMENTS}). If z.library is
+             not installed when a Deflate job actually runs, its files
+             are simply stored uncompressed instead - nothing fails,
+             but check the Restore tab's Compression column to see
+             what a given archive actually ended up using.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node SCHEDULING "Scheduling"
+@{b}Scheduling@{ub}
+
+Any Backup or Sync Job can be given a Schedule (in its Create/Edit
+dialog): Off (the default - manual only), Daily/Weekly/Monthly at a
+chosen time (Weekly also picks a day of the week, Monthly a day of the
+month 1-31), or every 15/30 minutes or 1/3/6/12 hours.
+
+A Daily/Weekly/Monthly job catches up once if BackupVault is opened
+after today's/this week's/this month's scheduled time has already
+passed and it hasn't run yet in that period - it does not catch up for
+periods it was closed for entirely. An Interval job is purely
+elapsed-time based: if overdue when the program starts, it runs once
+soon after, then resumes its normal cadence from there. Either way,
+BackupVault checks for due jobs about every 30 seconds while it is
+running.
+
+Classic AmigaOS has no background-service mechanism, so a schedule only
+takes effect while BackupVault's own process is actually running - a
+scheduled job never runs while the program is not open. A scheduled
+Sync Job also skips its usual confirmation prompt when it fires on its
+own (there is no one there to answer it) - only a manual Start press
+still asks first.
+
+To have BackupVault start automatically at boot and sit quietly in the
+background (so its schedules can actually run unattended):
+  1. Put BackupVault (or an icon that runs it) in your WBStartup:
+     drawer.
+  2. Open that icon's Information window (Workbench's Icons menu) and
+     add a Tool Type: STARTICONIFIED
+Launched this way, BackupVault opens iconified (an icon on Workbench,
+no visible window) instead of popping up its window - double-click
+that icon at any time to open the window normally. A normal double-
+click launch (no STARTICONIFIED, or launched from a Shell) always opens
+the window as usual.
+
+See @{" Headless daemon " LINK DAEMON} for BackupVaultDaemon, an
+alternative, still-experimental way to run scheduled jobs without
+BackupVault's own window open at all.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node DAEMON "Headless daemon"
+@{b}BackupVaultDaemon@{ub}
+
+@{b}EXPERIMENTAL - STILL IN DEVELOPMENT.@{ub} BackupVaultDaemon is a
+separate, tiny CLI tool (no MUI, no window at all) that runs your
+saved, scheduled Backup/Sync Jobs headlessly - an alternative to
+keeping BackupVault itself open/iconified just for scheduling.
+
+  Run >NIL: BackupVaultDaemon
+runs it continuously (suitable for S:User-Startup); or run
+
+  BackupVaultDaemon ONESHOT
+from a Shell to check once for due jobs and exit (useful for testing).
+
+Do NOT run this at the same time as leaving BackupVault's own window
+open with jobs scheduled - the two do not coordinate with each other,
+so the same job could fire from both at once. Pick one scheduler for
+your jobs, not both.
+
+This tool has only been verified to compile - it has NOT been proven
+through extended real-world testing on real or emulated Amiga hardware
+yet. Before relying on it, please test it yourself with ONESHOT first,
+then watch it run unattended over a real scheduled interval, on a
+Repository/directories you can afford to lose, with an independent
+backup kept elsewhere regardless. If you find a problem, please report
+it - see @{" Contact & credits " LINK CONTACT}.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node WEBDAEMON "Web daemon"
+@{b}BackupVaultWebDaemon@{ub}
+
+@{b}EXPERIMENTAL - STILL IN DEVELOPMENT - NOT YET INTEGRATED INTO THE
+GUI.@{ub} BackupVaultWebDaemon is a separate, standalone HTTP server that
+lets you browse and download the contents of your saved Repositories
+from an ordinary web browser on the same network, without opening
+BackupVault itself.
+
+Run it from a Shell:
+
+  BackupVaultWebDaemon
+uses the default port, 1453. Override it with:
+
+  BackupVaultWebDaemon PORT=8080
+
+Point a browser at the Amiga's IP address and that port to see a list
+of Repositories, browse into them, and download individual files.
+
+This is a first working prototype, not a finished feature:
+
+  - It serves plain HTTP with no authentication or encryption - anyone
+    who can reach that port on your network can browse and download
+    from every Repository it lists. Treat it as a convenience for a
+    small, trusted local network, not something to expose to the
+    internet or an untrusted network.
+  - It is read-only (no upload, delete, or partial-range support) and
+    handles one request at a time.
+  - There is currently no button in the BackupVault GUI to start or
+    stop it - it has to be run separately, by hand or from your own
+    startup script.
+  - It has been verified to compile and run, but has not had anywhere
+    near the real-world use the rest of the program has. Its command-
+    line options and behavior may change before it's considered
+    stable, and it may eventually be integrated into the main GUI
+    (started/stopped from a button there) if it proves out.
+
+If you try it, please report anything unexpected - see
+@{" Contact & credits " LINK CONTACT}.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node RUNNINGJOBS "Running a job"
+@{b}Running a job@{ub}
+
+Select a job in the Backup tab's list and press Start. The gauge and
+status line below it track progress and show the exact result once the
+run finishes (e.g. "Backup completed successfully."). Pause suspends a
+running job (Resume continues it); Stop cancels it - for a Backup Job,
+the incomplete archive is deleted and the cancellation is logged,
+rather than leaving a partial, unusable file behind.
+
+If files are added to or removed from the source while a backup is
+mid-run, BackupVault does not (and cannot, on classic AmigaOS) freeze a
+perfectly consistent snapshot of it - there is no OS-level mechanism
+for that, the way VSS/LVM/ZFS snapshots work elsewhere. A file removed
+after being listed but before being read is logged as a failure for
+that one file only, without corrupting the rest of the archive; a file
+added mid-run is usually picked up too, just with a harmless note in
+the log if the final count doesn't match the original scan. For
+anything you care about being consistent down to the second, avoid
+actively changing it while its backup is running.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node RESTORETAB "The Restore tab"
+@{b}The Restore tab@{ub}
+
+The Restore tab shows a tree built straight from the filesystem - one
+parent node per Backup Job, one leaf per archive found in that job's
+Repository. Selecting a leaf enables three buttons:
+
+  @{" Full Restore "   LINK FULLRESTORE}
+  @{" Restore Files "  LINK RESTOREFILES}
+  @{" Check "          LINK CHECKARCHIVE}
+
+@{" Import "  LINK IMPORTBACKUP} (on the Backup tab) adds an archive that
+wasn't created by a BackupVault Job into this tree.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node FULLRESTORE "Full Restore"
+@{b}Full Restore@{ub}
+
+Restores the entire selected archive into a directory you choose. Opens
+its own small window pre-filled with the archive and a destination
+field (with its own Select... browser); its own Start button closes
+that window and runs the restore through the main window's shared
+progress gauge.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node RESTOREFILES "Restore Files"
+@{b}Restore Files@{ub}
+
+Opens the selected archive's file list so you can check exactly which
+files/folders to restore, rather than the whole thing - checking a
+folder includes everything under it. Its own "Restore Selected" button
+closes the window and runs a filtered restore through the same shared
+progress gauge Full Restore uses.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node CHECKARCHIVE "Check"
+@{b}Check@{ub}
+
+Verifies the selected archive's integrity - recomputing and comparing
+every entry's stored checksum - without restoring anything, without
+its own window; it runs immediately through the shared progress gauge
+and reports success/failure the same way a backup or restore does.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node IMPORTBACKUP "Import"
+@{b}Import@{ub}
+
+Lets you pick a .bku archive that was not created by a BackupVault Job
+- from the Backup tab's "Import" button. BackupVault reads that
+archive's own saved metadata (job name, source path, Repository name/
+path, note, compression type) and automatically creates a matching
+Repository and/or Backup Job for it if they don't already exist, then
+shows it in the Restore tree like any other archive.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node HISTORYTAB "The History tab"
+@{b}The History tab@{ub}
+
+Every backup/restore/sync/check/deletion appears as a row (Type, Name,
+Date, Size, Location), searchable via the tab's own search field.
+Buttons:
+
+  @{b}Search@{ub}    - filters the list to rows matching the typed text.
+  @{b}Refresh@{ub}   - rebuilds the list from the catalog on disk.
+  @{b}View Log@{ub}  - shows the selected run's own full log file (or
+              double-click the row) in its own window - one line per
+              row, with anything worth noticing (a warning, a virus-
+              scan hit, a failure/cancellation) shown in bold. That
+              window's own "Open in Multiview" button opens the same
+              file in Multiview instead, for its full-text search or
+              printing.
+
+The History menu adds two distinct, non-overlapping actions:
+
+  @{b}Remove All Logs@{ub} - deletes only the per-run log files under
+                  PROGDIR:logs. The History list itself is untouched -
+                  View Log simply finds nothing for those older rows
+                  afterward.
+  @{b}Remove History@{ub}  - clears the History list (the catalog) itself
+                  instead - a separate, more drastic action. Log files
+                  on disk are not touched by this one.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node CLITOOL "The command-line tool"
+@{b}The command-line tool (Backup)@{ub}
+
+A separate command-line program, sharing the same archive format and
+doing the actual work behind every BackupVault GUI operation - for
+scripted use from a Shell without the GUI, or from AmigaDOS scripts/
+Jobs, Repositories, or Sync.
+
+  Backup SOURCE DEST
+      SOURCE (a disk or directory) is backed up into archive DEST.
+  Backup SOURCE DEST RESTORE
+      SOURCE (an archive file) is restored into directory DEST.
+  Backup SOURCE LIST
+      Lists the contents of archive file SOURCE.
+
+A backup or restore run also writes its own
+"<name>.backup.log"/"<name>.restore.log" file under PROGDIR:logs, the
+same as a job run from the GUI does.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node FILESCREATED "Files this program uses"
+@{b}Files created by the program@{ub}
+
+  PROGDIR:logs/                         - one log file per backup/
+                                          restore/sync/check run.
+  PROGDIR:data/BackupVault.catalog      - the History tab's data: every
+                                          past backup/restore/sync/
+                                          check/deletion.
+  PROGDIR:data/BackupVault.repos        - saved Repositories, including
+                                          SMB/SFTP connection details
+                                          and passwords in plain text -
+                                          see @{" Repositories " LINK REPOSITORIES}.
+  PROGDIR:data/BackupVault.credentials  - saved Credentials, in plain
+                                          text - see @{" Credentials "
+                                          LINK CREDENTIALS}.
+  PROGDIR:data/BackupVault.jobs         - saved Backup Jobs.
+  PROGDIR:data/BackupVault.jobextras    - a Backup Job's "Scan for
+                                          viruses before backup" setting
+                                          - see @{" Creating a Backup Job "
+                                          LINK CREATEJOB} - kept separate
+                                          from BackupVault.jobs so adding
+                                          it couldn't corrupt existing
+                                          saved jobs.
+  PROGDIR:data/BackupVault.syncjobs     - saved Sync Jobs.
+  PROGDIR:data/BackupVault.sync.<name>  - one per Sync Job, its
+                                          baseline (what both sides
+                                          looked like after its last
+                                          successful run - see
+                                          @{" Sync Jobs " LINK SYNCJOBS}).
+  DEVS:DOSDrivers/<volume>              - one per mounted SMB/SFTP
+                                          Repository, kept until that
+                                          Repository is deleted - see
+                                          @{" Repositories " LINK REPOSITORIES}.
+
+Everything under PROGDIR:data/ used to sit directly under PROGDIR:
+instead (as plain PROGDIR:BackupVault.repos etc.) before version 0.6.4
+- an existing install's files are moved into PROGDIR:data/
+automatically, once, the first time you run this version.
+
+None of these are required for the program to run, and can be deleted
+freely - you will simply lose your History list and your saved
+Repositories/Credentials/Jobs (and, for a Sync Job's own baseline file,
+its next run will treat every file as new rather than picking up where
+the last run left off).
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node LIMITATIONS "Known limitations"
+@{b}Known limitations@{ub}
+
+  - Every backup produces a full, standalone archive - there is no
+    incremental backup support.
+  - The built-in LZSS compression is a small, from-scratch
+    implementation, chosen to avoid extra library dependencies. It
+    will not compress as well as Deflate or a dedicated compressor.
+  - Sync Jobs are new and still being tested in real-world use - see
+    @{" Sync Jobs " LINK SYNCJOBS} and @{" Disclaimer " LINK DISCLAIMER}.
+  - BackupVaultDaemon and BackupVaultWebDaemon are both still under
+    active development - see @{" Headless daemon " LINK DAEMON} and
+    @{" Web daemon " LINK WEBDAEMON}. Do not rely on either as your
+    only means of running scheduled jobs, and do not expose
+    BackupVaultWebDaemon beyond a trusted local network.
+  - There is no snapshot/point-in-time consistency mechanism - classic
+    AmigaOS doesn't provide one a userland program could use - see
+    @{" Running a job " LINK RUNNINGJOBS}.
+  - SMB/SFTP Credential passwords, and a Repository's own copy of them,
+    are stored in plain text - see
+    @{" Files this program uses " LINK FILESCREATED}.
+  - As beta-quality software generally, testing so far has been
+    limited - see @{" Disclaimer " LINK DISCLAIMER}.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node DISCLAIMER "Disclaimer"
+@{b}This is beta-quality software - please read this@{ub}
+
+BackupVault reads from and writes to your filesystem, including
+restoring and syncing files that can overwrite or delete existing
+ones. Like any software, it may contain bugs that could lead to data
+loss or other damage. Sync Jobs, BackupVaultDaemon, and
+BackupVaultWebDaemon (see @{" Sync Jobs " LINK SYNCJOBS},
+@{" Headless daemon " LINK DAEMON}, @{" Web daemon " LINK WEBDAEMON}) in
+particular are new and still under active development.
+
+By downloading, installing, or running this software, you agree that:
+
+  - You do so entirely at your own risk, of your own free will, as a
+    voluntary test of beta software.
+  - You keep an independent backup of anything you are not prepared to
+    lose, made by some other means, before relying on this program for
+    it.
+  - The developer accepts no responsibility or liability for any data
+    loss, corruption, or other damage resulting from the use of this
+    software.
+
+If that is not acceptable to you, please do not use this program.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
+
+
+@node CONTACT "Contact & credits"
+@{b}Contact@{ub}
+
+Serkan Dursun
+blasterreal@{"@"}gmail.com
+
+Please include the relevant log file from PROGDIR:logs/ when reporting
+a problem, if you can.
+
+@{b}Credits@{ub}
+
+Built with SAS/C 6.58 and MUI, using the third-party TabGroup.mcc and
+NList.mcc/NListview.mcc/NListtree.mcc custom classes. Deflate
+compression uses the third-party z.library (salass00/z_lib). MD5 (used
+by Sync Jobs to detect real content changes) is Colin Plumb's 1993
+public-domain implementation. SMB Share and SFTP Repositories are
+backed by the third-party smb2fs and ssh2-handler by Fredrik Wikstrom
+(salass00/smb2fs, ssh2-handler) - neither is included with this
+program and must be installed separately if you want to use them.
+Virus scanning uses the third-party xvs.library by Georg Wittmann and
+the Virus Help Team - also not included, install it separately if you
+want to use that option.
+
+Go back to the @{" main menu " LINK MAIN}.
+@endnode
