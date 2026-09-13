@@ -225,20 +225,26 @@ REPOSITORIES
   shows the native filesystem and its version for a Local Repository
   (e.g. "PFS3 19.4"), or "smb2-handler"/"ssh2-handler" plus that
   handler's own version for SMB/SFTP - those two don't report a real
-  AmigaDOS filesystem type the way a local one does.
+  AmigaDOS filesystem type the way a local one does. For a Local
+  Repository, this is identified by asking the actual handler task
+  managing that volume, not just by reading its reported DOS type -
+  a volume can be set up to report a plain FFS-style type while a
+  different handler (most commonly PFS3) is really running it, which
+  the DOS type alone can't reveal.
 
   A Local Repository's row also shows a Max Filename column - the
-  longest filename that volume can actually store. For native OFS/FFS
-  this is always exactly 30 characters (a fixed AmigaOS limit, shown
-  instantly, no test needed); for anything else (PFS/PFS3/SFS, etc.),
-  which filesystem support depends on how that specific volume was
-  formatted rather than anything BackupVault can just ask it, it is
-  found by actually creating and immediately deleting a test file of
-  various lengths on that volume. This is shown as "-" for SMB/SFTP
-  Repositories, since the real limit there is whatever the remote
-  server enforces. Knowing this number in advance matters most for a
-  Sync Job's destination - see SYNC JOBS above for what happens when a
-  file's name is too long for it.
+  longest filename that volume can actually store, found by actually
+  creating and immediately deleting a test file of various lengths on
+  it. This is always tested for real rather than assumed from the
+  volume's reported filesystem type, even for what looks like plain
+  FFS - a volume can be deliberately set up to report a standard
+  FFS-style filesystem id while a different handler (e.g. PFS3) with a
+  different real limit actually manages it, and there is no other way
+  to be sure. This is shown as "-" for SMB/SFTP Repositories, since the
+  real limit there is whatever the remote server enforces. Knowing this
+  number in advance matters most for a Sync Job's destination - see
+  SYNC JOBS above for what happens when a file's name is too long for
+  it.
 
   A Repository that is still used by a Backup Job cannot be deleted -
   BackupVault lists which job(s) need to be pointed at a different
@@ -655,8 +661,14 @@ VERSION HISTORY (0.4.0 -> 0.7.0)
     - Fixed: a one-way Sync Job's progress bar could show roughly double
       the real number of files once its baseline was fully populated.
     - Repository list gained a Max Filename column for Local
-      Repositories (instant "30" for native OFS/FFS, an actual test for
-      anything else) - see REPOSITORIES.
+      Repositories, found by actually testing the volume rather than
+      trusting its reported filesystem type - see REPOSITORIES.
+    - Repository list's File System column now identifies a Local
+      Repository by asking its actual handler task, not just its
+      reported DOS type - a volume can report a plain FFS-style type
+      while a different handler (most commonly PFS3) really manages it,
+      which the old dostype-only check could not detect - see
+      REPOSITORIES.
     - BackupVault.jobextras changed from a fixed-size binary record to
       plain text internally, so it can keep gaining fields (like
       Exclude patterns, this release) without any risk of corrupting an
